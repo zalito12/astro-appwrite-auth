@@ -1,0 +1,25 @@
+---
+import Login from '@components/account/Login.astro';
+import Register from '@components/account/Register.astro';
+
+export function getStaticPaths() {
+  return [
+    {params: {page: 'login'}},
+    {params: {page: 'register'}},
+  ];
+}
+
+const { user } = Astro.locals;
+if (user) {
+  return Astro.redirect("/dashboard");
+}
+
+const { page } = Astro.params;
+
+if (page !== 'login' && page !== 'register') {
+  return Astro.redirect("/account/login");
+}
+---
+
+{page === 'login' && <Login />}
+{page === 'register' && <Register />}

@@ -1,0 +1,76 @@
+---
+import "@/styles/globals.css";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Image, Picture } from "astro:assets"
+import imgRegister from "@/assets/register.jpeg"
+import imgGoogle from "@/assets/icons/google.svg"
+import imgApple from "@/assets/icons/apple.svg"
+import imgMicrosoft from "@/assets/icons/microsoft.svg"
+---
+
+<div class="w-full lg:grid  lg:grid-cols-2 min-h-screen">
+    <div class="flex items-center justify-center py-12">
+    <div class="mx-auto grid w-[350px] gap-6">
+        <div class="grid gap-2 text-center">
+        <h1 class="text-3xl font-bold">Login</h1>
+        <p class="text-balance text-muted-foreground">
+            Enter your email below to login to your account
+        </p>
+        </div>
+        <div class="grid gap-4">
+        <div class="grid gap-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+            id="email"
+            type="email"
+            placeholder="m@example.com"
+            required
+            />
+        </div>
+        <div class="grid gap-2">
+            <div class="flex items-center">
+            <Label htmlFor="password">Password</Label>
+            <a
+                href="/account/forgot-password"
+                class="ml-auto inline-block text-sm underline"
+            >
+                Forgot your password?
+            </a>
+            </div>
+            <Input id="password" type="password" required />
+        </div>
+        <Button type="submit" class="w-full">
+            Login
+        </Button>
+        <Button variant="outline" class="w-full">
+            <Image src={imgGoogle} alt="Google logo" class="w-5 h-5 mr-2" />
+            Login with Google
+        </Button>
+        <Button variant="outline" class="w-full">
+            <Image src={imgApple} alt="Google logo" class="w-5 h-5 mr-2" />
+            Login with Apple
+        </Button>
+        <Button variant="outline" class="w-full">
+            <Image src={imgMicrosoft} alt="Google logo" class="w-5 h-5 mr-2" />
+            Login with Microsoft
+        </Button>
+        </div>
+        <div class="mt-4 text-center text-sm">
+        Don&apos;t have an account?{" "}
+        <a href="/account/register" class="underline">
+            Sign up
+        </a>
+        </div>
+    </div>
+    </div>
+    <div class="hidden bg-muted lg:block">
+    <Picture
+        src={imgRegister}
+        formats={["webp", "avif"]}
+        alt="Account features image"
+        class="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+    />
+    </div>
+</div>
