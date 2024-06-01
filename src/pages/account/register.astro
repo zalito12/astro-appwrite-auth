@@ -1,0 +1,208 @@
+---
+export const prerender = false;
+
+const { origin } = Astro.url;
+
+import '@/styles/globals.css';
+import Layout from '../../layouts/Layout.astro';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Image, Picture } from 'astro:assets';
+import imgRegister from '@/assets/register.jpeg';
+import imgGoogle from '@/assets/icons/google.svg';
+import imgApple from '@/assets/icons/apple.svg';
+import imgMicrosoft from '@/assets/icons/microsoft.svg';
+import { createAdminClient, createSessionClient } from '../../server/appwrite';
+import { ID } from 'node-appwrite';
+import { isValidEmail } from '../../lib/validators';
+
+type Message = {
+  message: string;
+  type: 'error' | 'success';
+};
+
+const createAccount = async (
+  origin: string,
+  name: string,
+  email: string,
+  password: string
+): Promise<Message> => {
+  // Create the admin client
+  const { account } = createAdminClient();
+
+  // Create the email password session
+  try {
+    await account.create(ID.unique(), email, password, name);
+  } catch (error: any) {
+    return {
+      message: error?.message || 'Invalid account data',
+      type: 'error',
+    };
+  }
+
+  // Start session
+  const session = await account.createEmailPasswordSession(email, password);
+  const userAccount = createSessionClient(session.secret).account;
+  await userAccount.createVerification(`${origin}/user/verify-email`);
+
+  // Set the session cookie
+  /* Astro.cookies.set(SESSION_COOKIE, session.secret, {
+    path: '/',
+    expires: new Date(session.expire),
+    sameSite: 'strict',
+    secure: true,
+    httpOnly: true,
+  }); */
+
+  return {
+    message: 'Account created! Verify your email to log in.',
+    type: 'success',
+  };
+};
+
+const dataHasError = (data: FormData): string[] | false => {
+  const email = data.get('email') as string;
+  const password = data.get('password') as string;
+  const name = data.get('name') as string;
+
+  const errors = [];
+  if (typeof name !== 'string' || name.length < 3) {
+    errors.push('Please enter a valid username.');
+  }
+
+  if (typeof email !== 'string' || !isValidEmail(email)) {
+    errors.push('Please enter a valid email.');
+  }
+
+  if (typeof password !== 'string') {
+    errors.push('Please enter a valid password.');
+  }
+
+  return errors.length > 0 ? errors : false;
+};
+
+const messages: Message[] = [];
+
+if (Astro.request.method === 'POST') {
+  // Extract the form data
+  const data = await Astro.request.formData();
+  const dataErrors = dataHasError(data);
+
+  if (!dataErrors) {
+    const email = data.get('email') as string;
+    const password = data.get('password') as string;
+    const name = data.get('name') as string;
+    const result = await createAccount(origin, name, email, password);
+
+    if (!result) {
+      // Redirect to the account page
+      //return Astro.redirect('/account/login');
+    }
+
+    messages.push(result);
+  } else {
+    messages.push(
+      ...dataErrors.map((message) => ({ message, type: 'error' }) as Message)
+    );
+  }
+}
+---
+
+<Layout title="Sign Up" description="Create an account to access the dashboard">
+  <div class="w-full lg:grid lg:grid-cols-2 min-h-screen">
+    <div class="flex items-center justify-center py-12">
+      <div class="mx-auto grid w-[350px] gap-6">
+        <div class="grid gap-2 text-center">
+          {
+            messages.length > 0 &&
+              messages.map((m) => (
+                <div
+                  class={`${m.type === 'error' ? 'text-red-500 bg-red-100' : 'text-green-500 bg-green-100'} p-2 rounded`}
+                >
+                  {m.message}
+                </div>
+              ))
+          }
+          <h1 class="text-3xl font-bold">Sign Up</h1>
+          <p class="text-balance text-muted-foreground">
+            Enter your information to create an account
+          </p>
+        </div>
+        <form method="POST">
+          <div class="grid gap-4">
+            <div class="grid gap-2">
+              <Label htmlFor="email">Name</Label>
+              <Input
+                id="name"
+                type="text"
+                name="name"
+                placeholder="Jane Doe"
+                autoComplete="name"
+                required
+              />
+            </div>
+            <div class="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                name="email"
+                placeholder="jane@example.com"
+                autoComplete="email"
+                required
+              />
+            </div>
+            <div class="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                name="password"
+                autoComplete="current-password"
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full">
+              Create an account
+            </Button>
+            <Button variant="outline" className="w-full justify-start">
+              <Image src={imgGoogle} alt="Google logo" class="w-5 h-5 mr-2" />
+              <div class="w-full flex justify-center items-center">
+                Sign In with Google
+              </div>
+            </Button>
+            <Button variant="outline" className="w-full flex justify-start">
+              <Image src={imgApple} alt="Google logo" class="w-5 h-5 mr-2" />
+              <div class="w-full flex justify-center items-center">
+                Sign In with Apple
+              </div>
+            </Button>
+            <Button variant="outline" className="w-full justify-start">
+              <Image
+                src={imgMicrosoft}
+                alt="Google logo"
+                class="w-5 h-5 mr-2"
+              />
+              <div class="w-full flex justify-center items-center">
+                Sign In with Microsoft
+              </div>
+            </Button>
+          </div>
+        </form>
+        <div class="mt-4 text-center text-sm">
+          Already have an account?{' '}
+          <a href="/account/login" class="underline"> Sign in </a>
+        </div>
+      </div>
+    </div>
+    <div class="hidden bg-muted lg:block">
+      <Picture
+        src={imgRegister}
+        formats={['webp', 'avif']}
+        alt="Account features image"
+        class="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+      />
+    </div>
+  </div>
+</Layout>

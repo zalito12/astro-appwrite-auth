@@ -16,7 +16,7 @@ export default defineConfig({
     react(),
     tailwind({ applyBaseStyles: false }),
   ],
-  output: 'server',
+  output: 'hybrid',
   adapter: node({
     mode: 'standalone',
   }),

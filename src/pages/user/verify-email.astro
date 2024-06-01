@@ -1,0 +1,85 @@
+---
+export const prerender = false;
+
+import '@/styles/globals.css';
+import { createSessionClientFromRequest } from '../../server/appwrite';
+import { BadgeCheck, OctagonAlert } from 'lucide-react';
+import { buttonVariants } from '@/components/ui/button';
+import Layout from '@/layouts/Layout.astro';
+import Landing from '@/layouts/Landing.astro';
+
+const { searchParams } = Astro.url;
+const secret = searchParams.get('secret') as string;
+const userId = searchParams.get('userId') as string;
+
+if (!secret || !userId) {
+  return new Response('Wrong verification link', { status: 400 });
+}
+
+const { user } = Astro.locals;
+if (!user) {
+  return Astro.redirect(
+    '/account/login?referer=' +
+      encodeURIComponent(
+        '/user/verify-email?userId=' + userId + '&secret=' + secret
+      )
+  );
+}
+
+let error = false;
+try {
+  const { account } = createSessionClientFromRequest(Astro.request);
+  await account.updateVerification(userId, secret);
+} catch (_error) {
+  console.log(_error);
+  error = true;
+}
+---
+
+<Layout title="Verify email" description="Verify your email address">
+  <Landing user={user}>
+    <div
+      class="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm w-full h-dvh"
+    >
+      {
+        error ? (
+          <div class="flex flex-col items-center gap-1 text-center">
+            <OctagonAlert className="w-20 h-20 text-red-500" />
+            <h1 class="text-3xl font-bold tracking-tight">
+              Account verification failed!
+            </h1>
+            <p class="text-lg text-muted-foreground">
+              Maybe the link is expired or invalid.
+            </p>
+            <div class="mt-6">
+              <a
+                href="/account/login"
+                class={buttonVariants({ variant: 'default' })}
+              >
+                Resend Verification Email
+              </a>
+            </div>
+          </div>
+        ) : (
+          <div class="flex flex-col items-center gap-1 text-center">
+            <BadgeCheck className="w-20 h-20 text-green-500" />
+            <h1 class="text-3xl font-bold tracking-tight">
+              Your account has been verified!
+            </h1>
+            <p class="text-lg text-muted-foreground">
+              Start creating awesome stuff right now!
+            </p>
+            <div class="mt-6">
+              <a
+                href="/dashboard"
+                class={buttonVariants({ variant: 'default' })}
+              >
+                Go to Dashboard
+              </a>
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </Landing>
+</Layout>

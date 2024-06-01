@@ -1,0 +1,20 @@
+---
+export type Message = {
+  message: string;
+  type: 'error' | 'success';
+};
+
+const { messages } = Astro.props as { messages: Message[] };
+---
+<div class="flex flex-col gap-2 items-center">
+{
+  messages.length > 0 &&
+    messages.map((m) => (
+      <div
+        class={`${m.type === 'error' ? 'text-red-500 bg-red-100' : 'text-green-500 bg-green-100'} p-2 rounded`}
+      >
+        {m.message}
+      </div>
+    ))
+}
+</div>

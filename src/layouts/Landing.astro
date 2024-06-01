@@ -1,0 +1,19 @@
+---
+import type { Models } from 'node-appwrite';
+
+interface Props {
+  user: Models.User<Models.Preferences>;
+}
+
+const { user } = Astro.props;
+---
+
+<nav>
+  <a href="/">Home</a>
+  <a href="/profile">Profile</a>
+  <a href="/settings">Settings</a>
+  <a href="/user/logout">Logout {user.name}</a>
+</nav>
+<main>
+  <slot />
+</main>

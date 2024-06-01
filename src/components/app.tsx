@@ -1,55 +1,25 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Outlet } from 'react-router-dom';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { DashMain } from './dashboard/DashMain';
+import { DashboardLayout, type DashboardProps } from './dashboard/DashboardLayout';
+import { Index } from './dashboard/pages/Index';
+import { Settings } from './dashboard/pages/Settings';
+import type { Models } from 'node-appwrite';
 
-const Settings = () => <h1>Settings</h1>;
-const Profile = () => <h1>Profile</h1>;
-
-const Navbar = () => {
-  return (
-    <nav>
-      <ul>
-        <li>
-          <Link to="/dashboard">Dashboard</Link>
-        </li>
-        <li>
-          <Link to="/dashboard/settings">Settings</Link>
-        </li>
-        <li>
-          <Link to="/dashboard/profile">Profile</Link>
-        </li>
-      </ul>
-    </nav>
-  );
-};
-
-const Layout = () => (
-  <div>
-    <Navbar />
-    <div>
-      <Outlet />
-    </div>
-  </div>
-);
-
-const router = createBrowserRouter([
+const router = (user: Models.User<Models.Preferences>) => createBrowserRouter([
   {
     path: 'dashboard',
-    element: <Layout />,
+    element: <DashboardLayout user={user} />,
     children: [
-      { path: '', element: <DashMain /> },
-      { path: 'settings', element: <Settings /> },
-      { path: 'profile', element: <Profile /> }
+      { path: '', element: <Index /> },
+      { path: 'settings', element: <Settings /> }
     ]
   }
 ]);
 
-export const App = () => {
+export const App = (props: DashboardProps) => {
   return (
     <React.StrictMode>
-      <RouterProvider router={router} />
+      <RouterProvider router={router(props.user)} />
     </React.StrictMode>
   );
 };

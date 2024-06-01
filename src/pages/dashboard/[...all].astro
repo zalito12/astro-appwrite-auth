@@ -1,9 +1,16 @@
 ---
+export const prerender = false;
+
+const { user } = Astro.locals;
+
 import { App } from "../../components/app";
 import Layout from "../../layouts/Layout.astro";
 import "@/styles/globals.css";
 ---
-
-<Layout title="Dashboard">
-  <App client:only />
+<script is:inline define:vars={{user}}>
+  const userName = decodeURIComponent(user.name);
+  console.log(userName);
+</script>
+<Layout title="Dashboard" description="Your Dashboard">
+  <App client:only="react" user={user}/>
 </Layout>

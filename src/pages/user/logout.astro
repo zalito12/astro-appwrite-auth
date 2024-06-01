@@ -1,0 +1,14 @@
+---
+import { SESSION_COOKIE } from '@/server/appwrite';
+
+export const prerender = true;
+
+Astro.cookies.delete(SESSION_COOKIE, {
+  path: '/',
+  sameSite: 'strict',
+  secure: true,
+  httpOnly: true,
+});
+
+return Astro.redirect('/account/login');
+---

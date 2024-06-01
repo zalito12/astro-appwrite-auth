@@ -1,0 +1,170 @@
+---
+export const prerender = false;
+
+import '@/styles/globals.css';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Image, Picture } from 'astro:assets';
+import imgRegister from '@/assets/register.jpeg';
+import imgGoogle from '@/assets/icons/google.svg';
+import imgApple from '@/assets/icons/apple.svg';
+import imgMicrosoft from '@/assets/icons/microsoft.svg';
+import Layout from '@/layouts/Layout.astro';
+import { isValidEmail } from '@/lib/validators';
+import { SESSION_COOKIE, createAdminClient } from '@/server/appwrite';
+import Messages, { type Message } from '@components/astro/Messages.astro';
+
+const getReferer = (): string => {
+  const { searchParams } = Astro.url;
+  const ref = searchParams.get('referer');
+  return ref ? decodeURIComponent(ref) : '/dashboard';
+};
+
+const login = async (
+  email: string,
+  password: string
+): Promise<string | true> => {
+  // Create the admin client
+  const { account } = createAdminClient();
+  try {
+    // Start session
+    const session = await account.createEmailPasswordSession(email, password);
+    // Set the session cookie
+    Astro.cookies.set(SESSION_COOKIE, session.secret, {
+      path: '/',
+      expires: new Date(session.expire),
+      sameSite: 'strict',
+      secure: true,
+      httpOnly: true,
+    });
+  } catch (error: any) {
+    if (
+      'general_argument_invalid' === error.type ||
+      'user_invalid_credentials' === error.type
+    ) {
+      return 'Invalid email or password';
+    }
+    return error.message || 'An error occurred';
+  }
+
+  return true;
+};
+
+const dataHasError = (data: FormData): string[] | false => {
+  const email = data.get('email') as string;
+  const password = data.get('password') as string;
+
+  const errors = [];
+
+  if (typeof email !== 'string' || !isValidEmail(email)) {
+    errors.push('Please enter a valid email.');
+  }
+
+  if (typeof password !== 'string') {
+    errors.push('Please enter a valid password.');
+  }
+
+  return errors.length > 0 ? errors : false;
+};
+
+let referer = getReferer();
+const messages: Message[] = [];
+
+if (Astro.request.method === 'POST') {
+  const data = await Astro.request.formData();
+  referer = data.get('referer') as string || referer;
+  const dataErrors = dataHasError(data);
+  if (!dataErrors) {
+    const email = data.get('email') as string;
+    const password = data.get('password') as string;
+    const result = await login(email, password);
+    if (true === result) {
+      return Astro.redirect(referer);
+    } else {
+      messages.push({ message: result as string, type: 'error' });
+    }
+  } else {
+    messages.push(
+      ...dataErrors.map((message) => ({ message, type: 'error' }) as Message)
+    );
+  }
+}
+---
+
+<Layout title="Sign In" description="Log in to access the dashboard">
+  <div class="w-full lg:grid lg:grid-cols-2 min-h-screen">
+    <div class="flex items-center justify-center py-12">
+      <div class="mx-auto grid w-[350px] gap-6">
+        <div class="grid gap-2 text-center">
+          <Messages messages={messages} />
+          <h1 class="text-3xl font-bold">Login</h1>
+          <p class="text-balance text-muted-foreground">
+            Enter your email below to login to your account
+          </p>
+        </div>
+        <form method="POST">
+          <input type="hidden" name="referer" value={referer} />
+          <div class="grid gap-4">
+            <div class="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                name="email"
+                placeholder="jane@example.com"
+                autoComplete="email"
+                required
+              />
+            </div>
+            <div class="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                name="password"
+                autoComplete="current-password"
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full"> Sign In </Button>
+            <Button variant="outline" className="w-full justify-start">
+              <Image src={imgGoogle} alt="Google logo" class="w-5 h-5 mr-2" />
+              <div class="w-full flex justify-center items-center">
+                Sign In with Google
+              </div>
+            </Button>
+            <Button variant="outline" className="w-full flex justify-start">
+              <Image src={imgApple} alt="Google logo" class="w-5 h-5 mr-2" />
+              <div class="w-full flex justify-center items-center">
+                Sign In with Apple
+              </div>
+            </Button>
+            <Button variant="outline" className="w-full justify-start">
+              <Image
+                src={imgMicrosoft}
+                alt="Google logo"
+                class="w-5 h-5 mr-2"
+              />
+              <div class="w-full flex justify-center items-center">
+                Sign In with Microsoft
+              </div>
+            </Button>
+          </div>
+        </form>
+        <div class="mt-4 text-center text-sm">
+          Don&apos;t have an account?{' '}
+          <a href="/account/register" class="underline"> Sign up </a>
+        </div>
+      </div>
+    </div>
+    <div class="hidden bg-muted lg:block">
+      <Picture
+        src={imgRegister}
+        formats={['webp', 'avif']}
+        alt="Account features image"
+        class="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+      />
+    </div>
+  </div>
+</Layout>
