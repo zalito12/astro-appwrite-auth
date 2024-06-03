@@ -89,7 +89,7 @@ import {
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuItem>Support</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem><a href="/user/logout">Logout</a></DropdownMenuItem>
+            <a href="/user/logout"><DropdownMenuItem>Logout</DropdownMenuItem></a>
           </DropdownMenuContent>
         </DropdownMenu>
       </header>

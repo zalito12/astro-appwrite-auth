@@ -1,9 +1,7 @@
 // src/server/appwrite.js
 
 import { Client, Account } from 'node-appwrite';
-
-// The name of your cookie that will store the session
-export const SESSION_COOKIE = '__session_web';
+import { getSessionCookie } from './auth';
 
 // Admin client, used to create new accounts
 export function createAdminClient() {
@@ -38,7 +36,7 @@ export function createSessionClient(session) {
 export function createSessionClientFromRequest(request) {
   // Get the session cookie from the request and set the session
   const cookies = parseCookies(request.headers.get('cookie') ?? '');
-  const session = cookies.get(SESSION_COOKIE);
+  const session = getSessionCookie(cookies);
   if (!session) {
     throw new Error('Session cookie not found');
   }

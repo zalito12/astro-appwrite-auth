@@ -1,14 +1,8 @@
 ---
-import { SESSION_COOKIE } from '@/server/appwrite';
+import { clearCookieSession } from '@/server/auth'
 
 export const prerender = true;
 
-Astro.cookies.delete(SESSION_COOKIE, {
-  path: '/',
-  sameSite: 'strict',
-  secure: true,
-  httpOnly: true,
-});
-
+clearCookieSession(Astro.cookies);
 return Astro.redirect('/account/login');
 ---

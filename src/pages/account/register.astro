@@ -14,8 +14,10 @@ import imgGoogle from '@/assets/icons/google.svg';
 import imgApple from '@/assets/icons/apple.svg';
 import imgMicrosoft from '@/assets/icons/microsoft.svg';
 import { createAdminClient, createSessionClient } from '../../server/appwrite';
-import { ID } from 'node-appwrite';
+import { ID, OAuthProvider } from 'node-appwrite';
 import { isValidEmail } from '../../lib/validators';
+import { getError } from '@/lib/errors';
+import AuthProviders from '@components/account/AuthProviders.astro';
 
 type Message = {
   message: string;
@@ -46,17 +48,8 @@ const createAccount = async (
   const userAccount = createSessionClient(session.secret).account;
   await userAccount.createVerification(`${origin}/user/verify-email`);
 
-  // Set the session cookie
-  /* Astro.cookies.set(SESSION_COOKIE, session.secret, {
-    path: '/',
-    expires: new Date(session.expire),
-    sameSite: 'strict',
-    secure: true,
-    httpOnly: true,
-  }); */
-
   return {
-    message: 'Account created! Verify your email to log in.',
+    message: 'Account created! Please Verify your email to log in.',
     type: 'success',
   };
 };
@@ -89,23 +82,23 @@ if (Astro.request.method === 'POST') {
   const data = await Astro.request.formData();
   const dataErrors = dataHasError(data);
 
-  if (!dataErrors) {
+  if (dataErrors) {
+    messages.push(
+      ...dataErrors.map((message) => ({ message, type: 'error' }) as Message)
+    );
+  } else {
     const email = data.get('email') as string;
     const password = data.get('password') as string;
     const name = data.get('name') as string;
     const result = await createAccount(origin, name, email, password);
-
-    if (!result) {
-      // Redirect to the account page
-      //return Astro.redirect('/account/login');
-    }
-
     messages.push(result);
-  } else {
-    messages.push(
-      ...dataErrors.map((message) => ({ message, type: 'error' }) as Message)
-    );
   }
+} else if (Astro.url.searchParams.has('from')) {
+  const error = Astro.url.searchParams.get('from') as string;
+  messages.push({
+    message: getError(error),
+    type: 'error',
+  });
 }
 ---
 
@@ -129,67 +122,48 @@ if (Astro.request.method === 'POST') {
             Enter your information to create an account
           </p>
         </div>
-        <form method="POST">
-          <div class="grid gap-4">
-            <div class="grid gap-2">
-              <Label htmlFor="email">Name</Label>
-              <Input
-                id="name"
-                type="text"
-                name="name"
-                placeholder="Jane Doe"
-                autoComplete="name"
-                required
-              />
-            </div>
-            <div class="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                name="email"
-                placeholder="jane@example.com"
-                autoComplete="email"
-                required
-              />
-            </div>
-            <div class="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                name="password"
-                autoComplete="current-password"
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full">
-              Create an account
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Image src={imgGoogle} alt="Google logo" class="w-5 h-5 mr-2" />
-              <div class="w-full flex justify-center items-center">
-                Sign In with Google
+        <div class="grid gap-2">
+          <form method="POST">
+            <div class="grid gap-4">
+              <div class="grid gap-2">
+                <Label htmlFor="email">Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  name="name"
+                  placeholder="Jane Doe"
+                  autoComplete="name"
+                  required
+                />
               </div>
-            </Button>
-            <Button variant="outline" className="w-full flex justify-start">
-              <Image src={imgApple} alt="Google logo" class="w-5 h-5 mr-2" />
-              <div class="w-full flex justify-center items-center">
-                Sign In with Apple
+              <div class="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  name="email"
+                  placeholder="jane@example.com"
+                  autoComplete="email"
+                  required
+                />
               </div>
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Image
-                src={imgMicrosoft}
-                alt="Google logo"
-                class="w-5 h-5 mr-2"
-              />
-              <div class="w-full flex justify-center items-center">
-                Sign In with Microsoft
+              <div class="grid gap-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  name="password"
+                  autoComplete="current-password"
+                  required
+                />
               </div>
-            </Button>
-          </div>
-        </form>
+              <Button type="submit" className="w-full">
+                Create an account
+              </Button>
+            </div>
+          </form>
+          <AuthProviders />
+        </div>
         <div class="mt-4 text-center text-sm">
           Already have an account?{' '}
           <a href="/account/login" class="underline"> Sign in </a>
