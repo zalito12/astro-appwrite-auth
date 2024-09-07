@@ -1,54 +1,33 @@
-# Astro Starter Kit: Basics
+# Astro + Appwrite with Auth Flow
 
-```sh
-npm create astro@latest -- --template basics
-```
+This is a starter project for [Appwrite.io](https://astro.build/) using [Astrojs](https://astro.build/) and React with a basic working auth flow.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/basics)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/basics/devcontainer.json)
+Working auth methods:
+- Email + password
+- Google
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Enviroment variables
 
-![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
+In order to work you must configure the next enviroment variables in your project root ``/env/.env``
 
-## 🚀 Project Structure
+````
+PUBLIC_APPWRITE_ENDPOINT=
+PUBLIC_APPWRITE_PROJECT=
+APPWRITE_KEY=
+````
 
-Inside of your Astro project, you'll see the following folders and files:
+## Routes
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── components/
-│   │   └── Card.astro
-│   ├── layouts/
-│   │   └── Layout.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+The Auth flow uses these routes:
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+- ``/account/login``: User login
+- ``/account/register``: User register
+- ``/account/reset-password``: Recover password
+- ``/account/forgot-password``: Set new password after recovery
+- ``/account/oauth``: Oauth flow
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+- ``/user/verify``: Screen to ensure every logged in user has verified email address. You can skip this restriction removing the ``unverifiedRedirect`` middleware inside ``/middleware/index.ts``
+- ``/user/verify-email``: Route to verify email after verification mail has been sent, the link will have this route.
+- ``/user/logout``: User logout (remove cookies and session)
 
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+- ``/dasboard``: Dashboard visible when user has logged in an email is verified.
