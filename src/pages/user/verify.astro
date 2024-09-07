@@ -26,7 +26,7 @@ if (Astro.request.method === 'POST') {
   if ('email' === action) {
     try {
       const { account } = createSessionClientFromRequest(Astro.request);
-      await account.createVerification(origin);
+      await account.createVerification(`${origin}/user/verify-email`);
       messages.push({ type: 'success', message: 'Verification email sent!' });
     } catch (error) {
       console.error('Error sending email:', error);
